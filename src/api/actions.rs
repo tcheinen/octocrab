@@ -1,8 +1,9 @@
 //! GitHub Actions
 use snafu::ResultExt;
 
-use crate::{params, Octocrab};
+use crate::models::actions::Artifact;
 use crate::models::{ArtifactId, RepositoryId, RunId};
+use crate::{params, Octocrab};
 
 /// Handler for GitHub's actions API.
 ///
@@ -186,6 +187,39 @@ impl<'octo> ActionsHandler<'octo> {
         );
 
         self.follow_location_to_data(self.crab._get(&route, None::<&()>).await?)
+            .await
+    }
+
+    /// Downloads and returns the raw data representing an artifact from a
+    /// repository.
+    /// ```no_run
+    /// # async fn run() -> octocrab::Result<()> {
+    ///
+    /// octocrab::instance()
+    ///     .actions()
+    ///     .list_artifacts("owner", "repo", Some(30), Some(1))
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn list_artifacts(
+        &self,
+        owner: impl AsRef<str>,
+        repo: impl AsRef<str>,
+        per_page: Option<usize>,
+        page: Option<usize>,
+    ) -> crate::Result<crate::Page<Artifact>> {
+        use serde_json::json;
+
+        let url = format!("repos/{}/{}/issues", owner.as_ref(), repo.as_ref());
+        self.crab
+            .get::<crate::Page<Artifact>, String, serde_json::Value>(
+                url,
+                Some(&json!({
+                    "per_page": per_page.unwrap_or(30),
+                    "page": page.unwrap_or(1)
+                })),
+            )
             .await
     }
 

@@ -15,6 +15,7 @@ pub mod pulls;
 pub mod repos;
 pub mod teams;
 pub mod workflows;
+pub mod actions;
 
 type BaseIdType = u64;
 
